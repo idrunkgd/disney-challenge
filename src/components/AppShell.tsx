@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSession } from '@/hooks/useSession';
@@ -46,6 +47,9 @@ export function AppShell({
             <div className="text-sm font-semibold">{session.family_name}</div>
           </div>
         </div>
+        <Link href="/admin" className="chip" aria-label="Espace admin">
+          ⚙️ Admin
+        </Link>
       </header>
       <div className="px-4 py-4">{children}</div>
       <BottomNav />
