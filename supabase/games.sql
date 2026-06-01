@@ -166,17 +166,15 @@ select f.id as family_id, f.name, f.avatar, f.color,
   coalesce(bt.pts,0)  as blind_points,
   coalesce(my.pts,0)  as mystery_points,
   coalesce(public.bingo_family_points(f.id),0) as bingo_points,
-  coalesce(ag.pts,0)  as agent_points,
   coalesce(ms.pts,0)+coalesce(sm.pts,0)+coalesce(qz.pts,0)+coalesce(bt.pts,0)
-    +coalesce(my.pts,0)+coalesce(public.bingo_family_points(f.id),0)+coalesce(ag.pts,0) as total_points,
+    +coalesce(my.pts,0)+coalesce(public.bingo_family_points(f.id),0) as total_points,
   coalesce(ms.cnt,0)  as missions_completed
 from public.families f
 left join (select family_id, sum(points_awarded) pts, count(*) cnt from public.mission_submissions where status='approved' group by family_id) ms on ms.family_id=f.id
 left join (select family_id, sum(points) pts from public.secret_missions where status='approved' group by family_id) sm on sm.family_id=f.id
 left join (select family_id, sum(points_awarded) pts from public.quiz_answers group by family_id) qz on qz.family_id=f.id
 left join (select family_id, sum(points_awarded) pts from public.blind_answers group by family_id) bt on bt.family_id=f.id
-left join (select family_id, 500 as pts from public.mystery_guesses where status='approved') my on my.family_id=f.id
-left join (select a.family_id, sum(m.points) pts from public.agent_assignments a join public.agent_missions m on m.id=a.mission_id where a.done group by a.family_id) ag on ag.family_id=f.id;
+left join (select family_id, 500 as pts from public.mystery_guesses where status='approved') my on my.family_id=f.id;
 grant select on public.family_scores to anon, authenticated;
 
 -- ── SEED : 100 cases de Bingo (easy=5 · medium=10 · rare=20) ─────────────────

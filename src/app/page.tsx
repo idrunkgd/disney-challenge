@@ -6,10 +6,9 @@ import { useSession } from '@/hooks/useSession';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 
 const tiles = [
-  { href: '/missions', icon: '🎯', label: 'Missions', desc: 'Défis photo & aventures' },
+  { href: '/missions', icon: '📸', label: 'Meilleure photo', desc: 'Défis photo & aventures' },
   { href: '/quiz', icon: '🧠', label: 'Quiz Disney', desc: '100 questions, 5 niveaux' },
-  { href: '/bingo', icon: '🎰', label: 'Bingo Disney', desc: '100 cases à cocher' },
-  { href: '/agent', icon: '🕵️', label: 'Agent Secret', desc: 'Ta mission secrète' },
+  { href: '/bingo', icon: '🎰', label: 'Bingo Disney', desc: 'Grille 5×5 à cocher' },
   { href: '/mystery', icon: '🖼️', label: 'Image Mystère', desc: 'Devinez le film · 500 pts' },
   { href: '/leaderboard', icon: '🏆', label: 'Classement', desc: 'Le score en direct' },
 ];

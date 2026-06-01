@@ -49,7 +49,7 @@ export default function MissionsPage() {
   const done = Object.values(subs).filter((s) => s.status === 'approved').length;
 
   return (
-    <AppShell title="Missions">
+    <AppShell title="Meilleure photo">
       <div className="card mb-4 flex items-center justify-between p-4">
         <div>
           <div className="text-sm font-semibold">Progression</div>

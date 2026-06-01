@@ -40,8 +40,8 @@ export default function MissionDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, session]);
 
-  if (loading) return <AppShell back title="Mission">Chargement…</AppShell>;
-  if (!mission) return <AppShell back title="Mission">Mission introuvable.</AppShell>;
+  if (loading) return <AppShell back title="Meilleure photo">Chargement…</AppShell>;
+  if (!mission) return <AppShell back title="Meilleure photo">Mission introuvable.</AppShell>;
 
   const statusText = {
     pending: '⏳ En attente de validation',
@@ -50,7 +50,7 @@ export default function MissionDetailPage() {
   };
 
   return (
-    <AppShell back title="Mission">
+    <AppShell back title="Meilleure photo">
       <div className="card p-6">
         <div className="text-5xl">{mission.icon}</div>
         <h1 className="mt-3 text-xl font-bold">{mission.title}</h1>

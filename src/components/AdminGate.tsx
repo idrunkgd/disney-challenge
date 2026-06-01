@@ -11,7 +11,6 @@ const nav = [
   { href: '/admin/missions', label: '🎯 Missions' },
   { href: '/admin/quiz', label: '🧠 Quiz' },
   { href: '/admin/mystery', label: '🖼️ Image Mystère' },
-  { href: '/admin/agent', label: '🕵️ Agent Secret' },
 ];
 
 // Vérifie l'accès admin via un endpoint protégé. Affiche le login sinon.
