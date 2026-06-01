@@ -10,6 +10,7 @@ const nav = [
   { href: '/admin/families', label: '👨‍👩‍👧 Familles' },
   { href: '/admin/missions', label: '🎯 Missions' },
   { href: '/admin/quiz', label: '🧠 Quiz' },
+  { href: '/admin/mystery', label: '🖼️ Image Mystère' },
 ];
 
 // Vérifie l'accès admin via un endpoint protégé. Affiche le login sinon.

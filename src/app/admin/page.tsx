@@ -9,6 +9,7 @@ const cards = [
   { href: '/admin/families', icon: '👨‍👩‍👧', label: 'Familles', desc: 'Créer les équipes et leurs mots de passe' },
   { href: '/admin/missions', icon: '🎯', label: 'Missions', desc: 'Catalogue des défis' },
   { href: '/admin/quiz', icon: '🧠', label: 'Quiz', desc: 'Banque de questions' },
+  { href: '/admin/mystery', icon: '🖼️', label: 'Image Mystère', desc: 'Choisir l\'image et valider' },
 ];
 
 function ResetZone() {

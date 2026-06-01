@@ -144,8 +144,25 @@ export interface FamilyScore {
   secret_points: number;
   quiz_points: number;
   blind_points: number;
+  mystery_points: number;
   total_points: number;
   missions_completed: number;
+}
+
+export interface MysteryImage {
+  id: string;
+  image_url: string;
+  answer: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface MysteryGuess {
+  id: string;
+  family_id: string;
+  guess: string;
+  status: SubmissionStatus;
+  created_at: string;
 }
 
 export interface BlindTrack {

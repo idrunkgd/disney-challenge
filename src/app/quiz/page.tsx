@@ -8,7 +8,6 @@ import type { QuizQuestion } from '@/lib/types';
 
 const TIME_PER_Q = 20; // secondes
 
-// Niveaux de difficulté (évolutif) : 5 paliers de 20 questions
 const LEVELS = [
   { d: 1, label: 'Facile', icon: '🟢' },
   { d: 2, label: 'Moyenne', icon: '🔵' },
@@ -28,8 +27,8 @@ export default function QuizPage() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, AnswerInfo>>({});
   const [loading, setLoading] = useState(true);
+  const [level, setLevel] = useState(1);
 
-  // Question en cours d'affichage (plein écran), null = on est sur le plateau
   const [active, setActive] = useState<QuizQuestion | null>(null);
   const [chosen, setChosen] = useState<number | null>(null);
   const [time, setTime] = useState(TIME_PER_Q);
@@ -56,7 +55,7 @@ export default function QuizPage() {
   useEffect(() => {
     if (!active || chosen !== null) return;
     if (time <= 0) {
-      void record(-1); // temps écoulé → réponse manquée
+      void record(-1);
       return;
     }
     const t = setTimeout(() => setTime((s) => s - 1), 1000);
@@ -64,8 +63,10 @@ export default function QuizPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [time, active, chosen]);
 
+  const levelList = (d: number) => questions.filter((q) => q.difficulty === d);
+
   function openQuestion(q: QuizQuestion) {
-    if (answers[q.id]) return; // déjà répondue
+    if (answers[q.id]) return;
     setActive(q);
     setChosen(null);
     setTime(TIME_PER_Q);
@@ -88,15 +89,34 @@ export default function QuizPage() {
         [active.id]: { chosen_index: row.chosen_index, is_correct: row.is_correct, points_awarded: row.points_awarded },
       }));
     }
-    // Retour automatique au plateau après un court feedback
-    setTimeout(() => setActive(null), 1800);
+  }
+
+  // Question suivante non répondue dans le même niveau (ou retour au plateau)
+  function nextUnanswered(): QuizQuestion | null {
+    if (!active) return null;
+    const list = levelList(active.difficulty);
+    const idx = list.findIndex((x) => x.id === active.id);
+    return list.slice(idx + 1).find((x) => !answers[x.id]) ?? null;
+  }
+
+  function goNext() {
+    const next = nextUnanswered();
+    if (next) {
+      setActive(next);
+      setChosen(null);
+      setTime(TIME_PER_Q);
+    } else {
+      setActive(null);
+    }
   }
 
   const totalPoints = Object.values(answers).reduce((s, a) => s + a.points_awarded, 0);
   const answeredCount = Object.keys(answers).length;
 
-  // ── Vue : plateau de questions ────────────────────────────────────────────
+  // ── PLATEAU (par niveau, 20 à la fois) ──────────────────────────────────────
   if (!active) {
+    const list = levelList(level);
+    const doneInLevel = list.filter((q) => answers[q.id]).length;
     return (
       <AppShell back title="Quiz Disney">
         <div className="card mb-4 flex items-center justify-between p-4">
@@ -110,95 +130,99 @@ export default function QuizPage() {
           </div>
         </div>
 
-        <p className="mb-3 px-1 text-xs text-white/50">
-          Touchez une case pour jouer la question. Vous avez {TIME_PER_Q} s, et chaque question ne se joue qu'une fois.
-        </p>
+        {/* Onglets de niveau */}
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          {LEVELS.map((lvl) => {
+            const ll = levelList(lvl.d);
+            const done = ll.filter((q) => answers[q.id]).length;
+            return (
+              <button
+                key={lvl.d}
+                onClick={() => setLevel(lvl.d)}
+                className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  level === lvl.d ? 'bg-magic-600 text-white shadow-glow' : 'bg-white/10 text-white/70'
+                }`}
+              >
+                {lvl.icon} {lvl.label}
+                <span className="ml-1 text-[10px] opacity-70">{done}/{ll.length}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mb-3 flex items-center justify-between px-1 text-xs text-white/50">
+          <span>{LEVELS[level - 1].icon} {LEVELS[level - 1].label} · {10 * level} pts / bonne réponse</span>
+          <span>{doneInLevel}/{list.length} jouées</span>
+        </div>
 
         {loading ? (
           <p className="text-white/50">Chargement…</p>
         ) : (
-          <div className="space-y-5">
-            {LEVELS.map((lvl) => {
-              const list = questions.filter((q) => q.difficulty === lvl.d);
-              if (list.length === 0) return null;
-              const doneInLevel = list.filter((q) => answers[q.id]).length;
+          <div className="grid grid-cols-5 gap-2">
+            {list.map((q, i) => {
+              const a = answers[q.id];
+              let cls = 'bg-magic-600 hover:bg-magic-500 active:scale-95';
+              let mark: string | number = i + 1;
+              if (a) {
+                if (a.is_correct) {
+                  cls = 'bg-emerald-600 cursor-default';
+                  mark = '✓';
+                } else {
+                  cls = 'bg-candy-600 cursor-default';
+                  mark = '✗';
+                }
+              }
               return (
-                <section key={lvl.d}>
-                  <div className="mb-2 flex items-center justify-between px-1">
-                    <span className="text-sm font-semibold">{lvl.icon} {lvl.label}</span>
-                    <span className="text-xs text-white/40">{doneInLevel}/{list.length} · {10 * lvl.d} pts</span>
-                  </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {list.map((q, i) => {
-                      const a = answers[q.id];
-                      let cls = 'bg-magic-600 hover:bg-magic-500 active:scale-95';
-                      let mark: string | number = i + 1;
-                      if (a) {
-                        if (a.is_correct) {
-                          cls = 'bg-emerald-500/30 border border-emerald-400 cursor-default';
-                          mark = '✓';
-                        } else {
-                          cls = 'bg-candy-500/30 border border-candy-400 cursor-default';
-                          mark = '✗';
-                        }
-                      }
-                      return (
-                        <button
-                          key={q.id}
-                          onClick={() => openQuestion(q)}
-                          disabled={!!a}
-                          className={`aspect-square rounded-xl text-base font-bold transition ${cls}`}
-                          aria-label={`${lvl.label} ${i + 1}`}
-                        >
-                          {mark}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
+                <button
+                  key={q.id}
+                  onClick={() => openQuestion(q)}
+                  disabled={!!a}
+                  className={`aspect-square rounded-xl text-base font-bold text-white transition ${cls}`}
+                >
+                  {mark}
+                </button>
               );
             })}
-          </div>
-        )}
-
-        {answeredCount === questions.length && questions.length > 0 && (
-          <div className="card mt-5 p-5 text-center">
-            <div className="text-4xl">🎉</div>
-            <p className="mt-2 font-semibold">Toutes les questions sont jouées !</p>
-            <p className="text-sm text-white/60">Total : {totalPoints} points pour votre famille.</p>
           </div>
         )}
       </AppShell>
     );
   }
 
-  // ── Vue : question ouverte (20 s) ─────────────────────────────────────────
+  // ── QUESTION OUVERTE ────────────────────────────────────────────────────────
+  const answered = chosen !== null;
+  const isCorrect = answered && chosen === active.correct_index;
+  const hasNext = !!nextUnanswered();
+
   return (
     <AppShell back title="Quiz Disney">
       <div className="mb-3 flex items-center justify-between text-sm">
-        <button onClick={() => setActive(null)} className="text-white/60 hover:text-white">← Plateau</button>
+        <button onClick={() => setActive(null)} className="text-white/70 hover:text-white">← Plateau</button>
         <span className={`font-bold ${time <= 5 ? 'text-candy-400' : 'text-gold-400'}`}>⏱ {time}s</span>
       </div>
       <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
         <div className="h-full bg-magic-500 transition-all" style={{ width: `${(time / TIME_PER_Q) * 100}%` }} />
       </div>
 
-      <div className="card p-6">
-        <span className="chip mb-3 bg-gold-500/20 text-gold-400">+{10 * active.difficulty} pts</span>
-        <h2 className="text-lg font-semibold">{active.question}</h2>
+      {/* Carte question : fond plein sombre + texte clair pour une lecture nette */}
+      <div className="rounded-2xl border border-white/10 bg-magic-900 p-6 shadow-xl">
+        <span className="chip mb-3 bg-gold-500/20 text-gold-300">
+          {LEVELS[active.difficulty - 1].icon} {LEVELS[active.difficulty - 1].label} · +{10 * active.difficulty} pts
+        </span>
+        <h2 className="text-lg font-semibold text-white">{active.question}</h2>
         <div className="mt-4 space-y-2">
           {active.options.map((opt, i) => {
-            let cls = 'bg-white/5 hover:bg-white/10';
-            if (chosen !== null) {
-              if (i === active.correct_index) cls = 'bg-emerald-500/30 border border-emerald-400';
-              else if (i === chosen) cls = 'bg-candy-500/30 border border-candy-400';
-              else cls = 'bg-white/5 opacity-60';
+            let cls = 'bg-magic-800 hover:bg-magic-700 text-white';
+            if (answered) {
+              if (i === active.correct_index) cls = 'bg-emerald-600 text-white';
+              else if (i === chosen) cls = 'bg-candy-600 text-white';
+              else cls = 'bg-magic-800/60 text-white/60';
             }
             return (
               <button
                 key={i}
                 onClick={() => record(i)}
-                disabled={chosen !== null}
+                disabled={answered}
                 className={`w-full rounded-xl px-4 py-3 text-left font-medium transition ${cls}`}
               >
                 {opt}
@@ -206,12 +230,20 @@ export default function QuizPage() {
             );
           })}
         </div>
-        {chosen !== null && (
-          <p className="mt-4 text-center text-sm text-white/60">
-            {chosen === active.correct_index ? 'Bonne réponse ! 🎉' : 'Dommage…'} Retour au plateau…
+
+        {answered && (
+          <p className="mt-4 text-center text-sm font-medium">
+            {isCorrect ? <span className="text-emerald-400">Bonne réponse ! 🎉</span> : <span className="text-candy-400">Dommage…</span>}
           </p>
         )}
       </div>
+
+      {answered && (
+        <div className="mt-4 flex gap-2">
+          <button onClick={() => setActive(null)} className="btn-ghost flex-1">← Retour au plateau</button>
+          {hasNext && <button onClick={goNext} className="btn-gold flex-1">Suivante →</button>}
+        </div>
+      )}
     </AppShell>
   );
 }

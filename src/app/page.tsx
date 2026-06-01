@@ -7,7 +7,8 @@ import { useLeaderboard } from '@/hooks/useLeaderboard';
 
 const tiles = [
   { href: '/missions', icon: '🎯', label: 'Missions', desc: 'Défis photo & aventures' },
-  { href: '/quiz', icon: '🧠', label: 'Quiz Disney', desc: '20 questions chrono' },
+  { href: '/quiz', icon: '🧠', label: 'Quiz Disney', desc: '100 questions, 5 niveaux' },
+  { href: '/mystery', icon: '🖼️', label: 'Image Mystère', desc: 'Devinez le film · 500 pts' },
   { href: '/leaderboard', icon: '🏆', label: 'Classement', desc: 'Le score en direct' },
 ];
 
