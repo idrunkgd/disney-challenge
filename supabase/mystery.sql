@@ -32,7 +32,7 @@ create policy "read_mystery_guesses" on public.mystery_guesses for select using 
 -- (security definer) et la validation par l'admin (service_role). On évite ainsi
 -- qu'une famille passe sa propre proposition en "approved".
 
-alter publication supabase_realtime add table public.mystery_guesses;
+-- (Temps réel optionnel : à activer une seule fois si souhaité, voir note en bas de fichier)
 
 -- Soumission d'une proposition (toujours en "pending", jamais auto-validée)
 create or replace function public.submit_mystery_guess(p_family_id uuid, p_guess text)
@@ -48,7 +48,9 @@ begin
 end; $$;
 
 -- ── Vue de classement : on ajoute les 500 points de l'image mystère ──────────
-create or replace view public.family_scores as
+-- DROP obligatoire : on insère une colonne au milieu, ce que CREATE OR REPLACE interdit.
+drop view if exists public.family_scores;
+create view public.family_scores as
 select
   f.id as family_id, f.name, f.avatar, f.color,
   coalesce(ms.pts,0)  as mission_points,

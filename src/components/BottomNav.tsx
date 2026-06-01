@@ -7,7 +7,7 @@ const items = [
   { href: '/', label: 'Accueil', icon: '🏠' },
   { href: '/missions', label: 'Missions', icon: '🎯' },
   { href: '/quiz', label: 'Quiz', icon: '🧠' },
-  { href: '/mystery', label: 'Mystère', icon: '🖼️' },
+  { href: '/bingo', label: 'Bingo', icon: '🎰' },
   { href: '/leaderboard', label: 'Classement', icon: '🏆' },
 ];
 

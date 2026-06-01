@@ -145,8 +145,30 @@ export interface FamilyScore {
   quiz_points: number;
   blind_points: number;
   mystery_points: number;
+  bingo_points: number;
+  agent_points: number;
   total_points: number;
   missions_completed: number;
+}
+
+export interface BingoCard {
+  id: string;
+  title: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'rare';
+  points: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface AgentMissionAssignment {
+  assignment_id: string;
+  mission_id: string;
+  title: string;
+  description: string;
+  difficulty: string;
+  points: number;
+  done: boolean;
 }
 
 export interface MysteryImage {
