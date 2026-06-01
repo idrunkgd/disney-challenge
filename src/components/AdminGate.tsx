@@ -34,8 +34,9 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
     });
+    const json = await res.json().catch(() => ({}));
     if (res.ok) setAuthed(true);
-    else setError('Mot de passe incorrect');
+    else setError(json.error || 'Mot de passe incorrect');
   }
 
   async function logout() {

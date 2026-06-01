@@ -1,5 +1,5 @@
 // Service worker minimal pour rendre la PWA installable + cache "app shell"
-const CACHE = 'dasolabs-disney-v1';
+const CACHE = 'dasolabs-disney-v2';
 const APP_SHELL = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -24,6 +24,12 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || !request.url.startsWith('http')) return;
   // On ne met jamais en cache les appels Supabase (données dynamiques)
   if (request.url.includes('supabase.co')) return;
+  // Ni les routes API internes (auth admin, etc.) — toujours réseau, jamais de cache
+  try {
+    if (new URL(request.url).pathname.startsWith('/api/')) return;
+  } catch {
+    return;
+  }
 
   event.respondWith(
     fetch(request)

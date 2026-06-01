@@ -6,6 +6,12 @@ export const runtime = 'nodejs';
 // POST { password } → pose le cookie admin si le mot de passe correspond.
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
+  if (!process.env.ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { error: "ADMIN_PASSWORD n'est pas configuré sur le serveur (variable d'environnement Vercel manquante)." },
+      { status: 500 }
+    );
+  }
   if (!password || password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 });
   }

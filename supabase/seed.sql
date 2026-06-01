@@ -121,3 +121,22 @@ insert into public.quiz_questions (question, options, correct_index, difficulty)
   ('Quel personnage d''"Encanto" ne doit-on "pas mentionner" ?', '["Bruno","Pepa","Félix","Camilo"]', 0, 3),
   ('Quel est le nom de l''éléphanteau aux grandes oreilles qui sait voler ?', '["Dumbo","Babar","Horton","Tantor"]', 0, 1)
 on conflict do nothing;
+
+-- ── Mélange des réponses ─────────────────────────────────────────────────────
+-- Ci-dessus, la bonne réponse est toujours en 1re position (correct_index = 0).
+-- On mélange les options de chaque question et on recalcule l'index correct,
+-- pour que la bonne réponse ne soit pas toujours « A ».
+do $$
+declare
+  r record; correct_val text; shuffled jsonb; new_idx int;
+begin
+  for r in select id, options, correct_index from public.quiz_questions loop
+    correct_val := r.options->>r.correct_index;
+    select jsonb_agg(e order by random()) into shuffled
+      from jsonb_array_elements(r.options) e;
+    select pos - 1 into new_idx
+      from jsonb_array_elements_text(shuffled) with ordinality as t(val, pos)
+      where val = correct_val limit 1;
+    update public.quiz_questions set options = shuffled, correct_index = new_idx where id = r.id;
+  end loop;
+end $$;

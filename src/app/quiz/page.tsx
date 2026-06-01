@@ -8,6 +8,15 @@ import type { QuizQuestion } from '@/lib/types';
 
 const TIME_PER_Q = 20; // secondes
 
+// Niveaux de difficulté (évolutif) : 5 paliers de 20 questions
+const LEVELS = [
+  { d: 1, label: 'Facile', icon: '🟢' },
+  { d: 2, label: 'Moyenne', icon: '🔵' },
+  { d: 3, label: 'Difficile', icon: '🟣' },
+  { d: 4, label: 'Expert', icon: '🟠' },
+  { d: 5, label: 'Impossible', icon: '🔴' },
+];
+
 interface AnswerInfo {
   chosen_index: number;
   is_correct: boolean;
@@ -108,30 +117,45 @@ export default function QuizPage() {
         {loading ? (
           <p className="text-white/50">Chargement…</p>
         ) : (
-          <div className="grid grid-cols-5 gap-2">
-            {questions.map((q, i) => {
-              const a = answers[q.id];
-              let cls = 'bg-magic-600 hover:bg-magic-500 active:scale-95';
-              let mark: string | number = i + 1;
-              if (a) {
-                if (a.is_correct) {
-                  cls = 'bg-emerald-500/30 border border-emerald-400 cursor-default';
-                  mark = '✓';
-                } else {
-                  cls = 'bg-candy-500/30 border border-candy-400 cursor-default';
-                  mark = '✗';
-                }
-              }
+          <div className="space-y-5">
+            {LEVELS.map((lvl) => {
+              const list = questions.filter((q) => q.difficulty === lvl.d);
+              if (list.length === 0) return null;
+              const doneInLevel = list.filter((q) => answers[q.id]).length;
               return (
-                <button
-                  key={q.id}
-                  onClick={() => openQuestion(q)}
-                  disabled={!!a}
-                  className={`aspect-square rounded-xl text-lg font-bold transition ${cls}`}
-                  aria-label={`Question ${i + 1}`}
-                >
-                  {mark}
-                </button>
+                <section key={lvl.d}>
+                  <div className="mb-2 flex items-center justify-between px-1">
+                    <span className="text-sm font-semibold">{lvl.icon} {lvl.label}</span>
+                    <span className="text-xs text-white/40">{doneInLevel}/{list.length} · {10 * lvl.d} pts</span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    {list.map((q, i) => {
+                      const a = answers[q.id];
+                      let cls = 'bg-magic-600 hover:bg-magic-500 active:scale-95';
+                      let mark: string | number = i + 1;
+                      if (a) {
+                        if (a.is_correct) {
+                          cls = 'bg-emerald-500/30 border border-emerald-400 cursor-default';
+                          mark = '✓';
+                        } else {
+                          cls = 'bg-candy-500/30 border border-candy-400 cursor-default';
+                          mark = '✗';
+                        }
+                      }
+                      return (
+                        <button
+                          key={q.id}
+                          onClick={() => openQuestion(q)}
+                          disabled={!!a}
+                          className={`aspect-square rounded-xl text-base font-bold transition ${cls}`}
+                          aria-label={`${lvl.label} ${i + 1}`}
+                        >
+                          {mark}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
               );
             })}
           </div>
