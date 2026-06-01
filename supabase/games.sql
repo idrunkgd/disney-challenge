@@ -112,6 +112,31 @@ begin
   update public.agent_assignments set done = p_done where user_id = p_user_id;
 end; $$;
 
+-- ── Score Bingo 5×5 : 10 pts / case + 20 pts / ligne complète ────────────────
+-- La grille = les 25 premières cases (sort_order 1..25). Lignes = 5 rangées,
+-- 5 colonnes et 2 diagonales.
+create or replace function public.bingo_family_points(p_family_id uuid)
+returns int language plpgsql stable security definer as $$
+declare done int[]; base int := 0; bonus int := 0; ln int[];
+begin
+  select coalesce(array_agg(b.sort_order), '{}') into done
+  from public.bingo_completions c
+  join public.bingo_cards b on b.id = c.card_id
+  where c.family_id = p_family_id and b.sort_order between 1 and 25;
+
+  base := coalesce(array_length(done, 1), 0) * 10;
+
+  for ln in select l from (values
+    (array[1,2,3,4,5]),(array[6,7,8,9,10]),(array[11,12,13,14,15]),(array[16,17,18,19,20]),(array[21,22,23,24,25]),
+    (array[1,6,11,16,21]),(array[2,7,12,17,22]),(array[3,8,13,18,23]),(array[4,9,14,19,24]),(array[5,10,15,20,25]),
+    (array[1,7,13,19,25]),(array[5,9,13,17,21])
+  ) as t(l) loop
+    if ln <@ done then bonus := bonus + 20; end if;
+  end loop;
+
+  return base + bonus;
+end; $$;
+
 -- ── Vue de classement : + bingo + agent secret ──────────────────────────────
 drop view if exists public.family_scores;
 create view public.family_scores as
@@ -121,10 +146,10 @@ select f.id as family_id, f.name, f.avatar, f.color,
   coalesce(qz.pts,0)  as quiz_points,
   coalesce(bt.pts,0)  as blind_points,
   coalesce(my.pts,0)  as mystery_points,
-  coalesce(bg.pts,0)  as bingo_points,
+  coalesce(public.bingo_family_points(f.id),0) as bingo_points,
   coalesce(ag.pts,0)  as agent_points,
   coalesce(ms.pts,0)+coalesce(sm.pts,0)+coalesce(qz.pts,0)+coalesce(bt.pts,0)
-    +coalesce(my.pts,0)+coalesce(bg.pts,0)+coalesce(ag.pts,0) as total_points,
+    +coalesce(my.pts,0)+coalesce(public.bingo_family_points(f.id),0)+coalesce(ag.pts,0) as total_points,
   coalesce(ms.cnt,0)  as missions_completed
 from public.families f
 left join (select family_id, sum(points_awarded) pts, count(*) cnt from public.mission_submissions where status='approved' group by family_id) ms on ms.family_id=f.id
@@ -132,7 +157,6 @@ left join (select family_id, sum(points) pts from public.secret_missions where s
 left join (select family_id, sum(points_awarded) pts from public.quiz_answers group by family_id) qz on qz.family_id=f.id
 left join (select family_id, sum(points_awarded) pts from public.blind_answers group by family_id) bt on bt.family_id=f.id
 left join (select family_id, 500 as pts from public.mystery_guesses where status='approved') my on my.family_id=f.id
-left join (select c.family_id, sum(b.points) pts from public.bingo_completions c join public.bingo_cards b on b.id=c.card_id group by c.family_id) bg on bg.family_id=f.id
 left join (select a.family_id, sum(m.points) pts from public.agent_assignments a join public.agent_missions m on m.id=a.mission_id where a.done group by a.family_id) ag on ag.family_id=f.id;
 grant select on public.family_scores to anon, authenticated;
 
