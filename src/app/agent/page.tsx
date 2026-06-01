@@ -65,9 +65,11 @@ export default function AgentPage() {
             {mission.done ? (
               <div className="text-center">
                 <p className="font-semibold text-emerald-400">✅ Mission accomplie — points gagnés !</p>
-                <button onClick={() => setDone(false)} disabled={busy} className="btn-ghost mt-3">
-                  Annuler
-                </button>
+                <p className="mt-1 text-sm text-white/60">L'organisateur va bientôt te confier une nouvelle mission.</p>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => load()} className="btn-gold flex-1">🔄 Voir ma nouvelle mission</button>
+                  <button onClick={() => setDone(false)} disabled={busy} className="btn-ghost flex-1">Annuler</button>
+                </div>
               </div>
             ) : (
               <button onClick={() => setDone(true)} disabled={busy} className="btn-gold w-full">

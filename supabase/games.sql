@@ -58,12 +58,14 @@ create policy "read_agent_missions" on public.agent_missions for select using (t
 
 create table if not exists public.agent_assignments (
   id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references public.users(id) on delete cascade unique,
+  user_id     uuid not null references public.users(id) on delete cascade,
   family_id   uuid not null references public.families(id) on delete cascade,
   mission_id  uuid not null references public.agent_missions(id) on delete cascade,
   done        boolean not null default false,
   created_at  timestamptz not null default now()
 );
+-- Historique : plusieurs missions par joueur (chaque mission faite reste comptée)
+alter table public.agent_assignments drop constraint if exists agent_assignments_user_id_key;
 alter table public.agent_assignments enable row level security;
 drop policy if exists "read_agent_assignments" on public.agent_assignments;
 create policy "read_agent_assignments" on public.agent_assignments for select using (true);
@@ -83,12 +85,13 @@ begin
 end; $$;
 
 -- Attribuer (une fois) une mission secrète à un joueur — privilégie une mission non encore distribuée
+-- Mission COURANTE du joueur = la dernière assignée. Crée la 1re automatiquement.
 create or replace function public.assign_agent_mission(p_user_id uuid, p_family_id uuid)
 returns table (assignment_id uuid, mission_id uuid, title text, description text, difficulty text, points int, done boolean)
 language plpgsql security definer as $$
 declare v_a public.agent_assignments; v_mid uuid;
 begin
-  select * into v_a from public.agent_assignments where user_id = p_user_id;
+  select * into v_a from public.agent_assignments where user_id = p_user_id order by created_at desc limit 1;
   if v_a.id is null then
     select m.id into v_mid from public.agent_missions m
       where m.is_active and not exists (select 1 from public.agent_assignments a where a.mission_id = m.id)
@@ -105,11 +108,27 @@ begin
     from public.agent_missions m where m.id = v_a.mission_id;
 end; $$;
 
--- Marquer sa mission secrète comme accomplie (ou annuler)
+-- Marquer la mission COURANTE (la plus récente) comme accomplie (ou annuler)
 create or replace function public.complete_agent(p_user_id uuid, p_done boolean)
 returns void language plpgsql security definer as $$
 begin
-  update public.agent_assignments set done = p_done where user_id = p_user_id;
+  update public.agent_assignments set done = p_done
+  where id = (select id from public.agent_assignments where user_id = p_user_id order by created_at desc limit 1);
+end; $$;
+
+-- ADMIN : attribuer une NOUVELLE mission à un joueur (privilégie une qu'il n'a jamais eue)
+create or replace function public.admin_assign_agent(p_user_id uuid)
+returns void language plpgsql security definer as $$
+declare v_fam uuid; v_mid uuid;
+begin
+  select family_id into v_fam from public.users where id = p_user_id;
+  select m.id into v_mid from public.agent_missions m
+    where m.is_active and not exists (select 1 from public.agent_assignments a where a.user_id = p_user_id and a.mission_id = m.id)
+    order by random() limit 1;
+  if v_mid is null then
+    select m.id into v_mid from public.agent_missions m where m.is_active order by random() limit 1;
+  end if;
+  insert into public.agent_assignments (user_id, family_id, mission_id) values (p_user_id, v_fam, v_mid);
 end; $$;
 
 -- ── Score Bingo 5×5 : 10 pts / case + 20 pts / ligne complète ────────────────

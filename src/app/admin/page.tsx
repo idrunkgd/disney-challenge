@@ -10,6 +10,7 @@ const cards = [
   { href: '/admin/missions', icon: '🎯', label: 'Missions', desc: 'Catalogue des défis' },
   { href: '/admin/quiz', icon: '🧠', label: 'Quiz', desc: 'Banque de questions' },
   { href: '/admin/mystery', icon: '🖼️', label: 'Image Mystère', desc: 'Choisir l\'image et valider' },
+  { href: '/admin/agent', icon: '🕵️', label: 'Agent Secret', desc: 'Missions et attribution' },
 ];
 
 function ResetZone() {
