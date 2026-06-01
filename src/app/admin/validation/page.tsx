@@ -72,12 +72,18 @@ export default function ValidationPage() {
 
   async function review(item: Pending, approve: boolean) {
     setBusy(item.id);
-    await fetch('/api/admin/review', {
+    const res = await fetch('/api/admin/review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ submission_id: item.id, approve, type: item.type }),
     });
-    setItems((l) => l.filter((i) => i.id !== item.id));
+    if (res.ok) {
+      // Ne retire la carte que si la validation a réellement réussi
+      setItems((l) => l.filter((i) => i.id !== item.id));
+    } else {
+      const j = await res.json().catch(() => ({}));
+      alert(`Échec de la validation : ${j.error || res.status}`);
+    }
     setBusy(null);
   }
 
