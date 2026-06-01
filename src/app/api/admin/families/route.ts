@@ -48,7 +48,14 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (password) {
-    await supabase.from('family_secrets').insert({ family_id: fam.id, password });
+    const { error: pwErr } = await supabase.from('family_secrets').insert({ family_id: fam.id, password });
+    if (pwErr) {
+      // La famille est créée mais le mot de passe n'a pas pu être enregistré.
+      return NextResponse.json(
+        { error: `Famille créée, mais mot de passe non enregistré : ${pwErr.message}. Avez-vous exécuté le SQL family_secrets ?` },
+        { status: 500 }
+      );
+    }
   }
   return NextResponse.json({ family: { ...fam, password: password ?? '' } });
 }

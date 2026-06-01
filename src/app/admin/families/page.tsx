@@ -27,14 +27,23 @@ export default function FamiliesAdminPage() {
   }
   useEffect(() => { load(); }, []);
 
+  const [error, setError] = useState('');
+
   async function create() {
     if (!name || !password) return;
     setBusy(true);
-    await fetch('/api/admin/families', {
+    setError('');
+    const res = await fetch('/api/admin/families', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, avatar, color, password }),
     });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(json.error || `Erreur ${res.status}`);
+      setBusy(false);
+      return;
+    }
     setName('');
     setPassword('');
     await load();
@@ -92,6 +101,7 @@ export default function FamiliesAdminPage() {
           <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="h-10 w-16 rounded" />
           <button onClick={create} disabled={busy || !name || !password} className="btn-primary flex-1">Créer la famille</button>
         </div>
+        {error && <p className="text-sm text-candy-400">⚠️ {error}</p>}
       </div>
 
       <div className="space-y-2">
