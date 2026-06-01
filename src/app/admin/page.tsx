@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { adminFetch } from '@/lib/admin-client';
 
 const cards = [
   { href: '/admin/progress', icon: '📊', label: 'Avancement', desc: 'Suivi en direct de chaque famille' },
@@ -21,7 +22,7 @@ function ResetZone() {
     if (!confirm('Action définitive. Confirmer la réinitialisation ?')) return;
     setBusy(true);
     setMsg('');
-    const res = await fetch('/api/admin/reset', { method: 'POST' });
+    const res = await adminFetch('/api/admin/reset', { method: 'POST' });
     const json = await res.json();
     setBusy(false);
     setMsg(res.ok ? `Réinitialisé ✓ (${json.photosDeleted} photo(s) supprimée(s))` : `Erreur : ${json.error}`);

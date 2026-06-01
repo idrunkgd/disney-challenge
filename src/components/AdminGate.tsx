@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { adminFetch, setAdminPw, clearAdminPw } from '@/lib/admin-client';
 
 const nav = [
   { href: '/admin/progress', label: '📊 Avancement' },
@@ -21,7 +22,8 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   async function check() {
-    const res = await fetch('/api/admin/families');
+    // Si un mot de passe est déjà mémorisé, on vérifie qu'il est valide
+    const res = await adminFetch('/api/admin/families');
     setAuthed(res.ok);
   }
   useEffect(() => {
@@ -30,18 +32,20 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
 
   async function login() {
     setError('');
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (res.ok) setAuthed(true);
-    else setError(json.error || 'Mot de passe incorrect');
+    // On mémorise le mot de passe puis on valide via un appel admin (en-tête)
+    setAdminPw(password);
+    const res = await adminFetch('/api/admin/families');
+    if (res.ok) {
+      setAuthed(true);
+    } else {
+      clearAdminPw();
+      const json = await res.json().catch(() => ({}));
+      setError(json.error || 'Mot de passe incorrect');
+    }
   }
 
   async function logout() {
-    await fetch('/api/admin/login', { method: 'DELETE' });
+    clearAdminPw();
     setAuthed(false);
   }
 

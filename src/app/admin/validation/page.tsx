@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { adminFetch } from '@/lib/admin-client';
 
 interface Pending {
   id: string;
@@ -72,7 +73,7 @@ export default function ValidationPage() {
 
   async function review(item: Pending, approve: boolean) {
     setBusy(item.id);
-    const res = await fetch('/api/admin/review', {
+    const res = await adminFetch('/api/admin/review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ submission_id: item.id, approve, type: item.type }),

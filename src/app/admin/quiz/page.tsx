@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { QuizQuestion } from '@/lib/types';
+import { adminFetch } from '@/lib/admin-client';
 
 const empty = { question: '', options: ['', '', '', ''], correct_index: 0, difficulty: 1, is_active: true };
 
@@ -10,14 +11,14 @@ export default function QuizAdminPage() {
   const [form, setForm] = useState<any>(empty);
 
   async function load() {
-    const res = await fetch('/api/admin/quiz');
+    const res = await adminFetch('/api/admin/quiz');
     setQuestions((await res.json()).questions ?? []);
   }
   useEffect(() => { load(); }, []);
 
   async function save() {
     if (!form.question || form.options.some((o: string) => !o)) return;
-    await fetch('/api/admin/quiz', {
+    await adminFetch('/api/admin/quiz', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -27,7 +28,7 @@ export default function QuizAdminPage() {
   }
   async function remove(id: string) {
     if (!confirm('Supprimer cette question ?')) return;
-    await fetch(`/api/admin/quiz?id=${id}`, { method: 'DELETE' });
+    await adminFetch(`/api/admin/quiz?id=${id}`, { method: 'DELETE' });
     await load();
   }
 

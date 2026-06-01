@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { adminFetch } from '@/lib/admin-client';
 
 interface Guess {
   id: string;
@@ -23,7 +24,7 @@ export default function MysteryAdminPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
-    const res = await fetch('/api/admin/mystery');
+    const res = await adminFetch('/api/admin/mystery');
     const json = await res.json();
     setImage(json.image ?? null);
     setGuesses(json.guesses ?? []);
@@ -39,7 +40,7 @@ export default function MysteryAdminPage() {
     const form = new FormData();
     form.append('file', file);
     form.append('answer', answer);
-    const res = await fetch('/api/admin/mystery', { method: 'POST', body: form });
+    const res = await adminFetch('/api/admin/mystery', { method: 'POST', body: form });
     const json = await res.json();
     setBusy(false);
     if (!res.ok) return setError(json.error || 'Erreur upload');
@@ -48,7 +49,7 @@ export default function MysteryAdminPage() {
   }
 
   async function validate(id: string, approve: boolean) {
-    await fetch('/api/admin/mystery', {
+    await adminFetch('/api/admin/mystery', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ guess_id: id, approve }),

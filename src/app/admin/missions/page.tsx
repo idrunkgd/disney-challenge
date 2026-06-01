@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Mission, MissionCategory } from '@/lib/types';
+import { adminFetch } from '@/lib/admin-client';
 
 const empty = {
   title: '', description: '', category: 'photo' as MissionCategory,
@@ -13,14 +14,14 @@ export default function MissionsAdminPage() {
   const [form, setForm] = useState<any>(empty);
 
   async function load() {
-    const res = await fetch('/api/admin/missions');
+    const res = await adminFetch('/api/admin/missions');
     setMissions((await res.json()).missions ?? []);
   }
   useEffect(() => { load(); }, []);
 
   async function save() {
     if (!form.title) return;
-    await fetch('/api/admin/missions', {
+    await adminFetch('/api/admin/missions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -30,7 +31,7 @@ export default function MissionsAdminPage() {
   }
   async function remove(id: string) {
     if (!confirm('Supprimer cette mission ?')) return;
-    await fetch(`/api/admin/missions?id=${id}`, { method: 'DELETE' });
+    await adminFetch(`/api/admin/missions?id=${id}`, { method: 'DELETE' });
     await load();
   }
 

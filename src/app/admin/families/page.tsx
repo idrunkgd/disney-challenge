@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Family } from '@/lib/types';
+import { adminFetch } from '@/lib/admin-client';
 
 const AVATARS = ['🐭', '👽', '🚀', '🦁', '🏰', '🧚', '🦄', '🐉', '⭐', '🎈'];
 
@@ -17,7 +18,7 @@ export default function FamiliesAdminPage() {
   const [pwEdits, setPwEdits] = useState<Record<string, string>>({});
 
   async function load() {
-    const res = await fetch('/api/admin/families');
+    const res = await adminFetch('/api/admin/families');
     const json = await res.json();
     const list: FamilyWithPw[] = json.families ?? [];
     setFamilies(list);
@@ -33,7 +34,7 @@ export default function FamiliesAdminPage() {
     if (!name || !password) return;
     setBusy(true);
     setError('');
-    const res = await fetch('/api/admin/families', {
+    const res = await adminFetch('/api/admin/families', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, avatar, color, password }),
@@ -51,7 +52,7 @@ export default function FamiliesAdminPage() {
   }
 
   async function savePassword(id: string) {
-    await fetch('/api/admin/families', {
+    await adminFetch('/api/admin/families', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, password: pwEdits[id] ?? '' }),
@@ -61,7 +62,7 @@ export default function FamiliesAdminPage() {
 
   async function remove(id: string) {
     if (!confirm('Supprimer cette famille et toutes ses données ?')) return;
-    await fetch(`/api/admin/families?id=${id}`, { method: 'DELETE' });
+    await adminFetch(`/api/admin/families?id=${id}`, { method: 'DELETE' });
     await load();
   }
 
