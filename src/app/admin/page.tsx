@@ -6,8 +6,7 @@ import { useState } from 'react';
 const cards = [
   { href: '/admin/progress', icon: '📊', label: 'Avancement', desc: 'Suivi en direct de chaque famille' },
   { href: '/admin/validation', icon: '✅', label: 'Validation photos', desc: 'Accepter / refuser les preuves' },
-  { href: '/admin/families', icon: '👨‍👩‍👧', label: 'Familles', desc: 'Créer et gérer les équipes' },
-  { href: '/admin/qrcodes', icon: '🔳', label: 'QR Codes', desc: 'Générer les codes de connexion' },
+  { href: '/admin/families', icon: '👨‍👩‍👧', label: 'Familles', desc: 'Créer les équipes et leurs mots de passe' },
   { href: '/admin/missions', icon: '🎯', label: 'Missions', desc: 'Catalogue des défis' },
   { href: '/admin/quiz', icon: '🧠', label: 'Quiz', desc: 'Banque de questions' },
 ];

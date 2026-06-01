@@ -8,7 +8,6 @@ const nav = [
   { href: '/admin/progress', label: '📊 Avancement' },
   { href: '/admin/validation', label: '✅ Validation' },
   { href: '/admin/families', label: '👨‍👩‍👧 Familles' },
-  { href: '/admin/qrcodes', label: '🔳 QR Codes' },
   { href: '/admin/missions', label: '🎯 Missions' },
   { href: '/admin/quiz', label: '🧠 Quiz' },
 ];

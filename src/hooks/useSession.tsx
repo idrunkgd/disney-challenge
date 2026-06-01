@@ -8,7 +8,7 @@ import { getSupabaseBrowser } from '@/lib/supabase/client';
 interface SessionContextValue {
   session: Session | null;
   loading: boolean;
-  login: (token: string, displayName?: string) => Promise<Session>;
+  login: (familyId: string, password: string, displayName?: string) => Promise<Session>;
   logout: () => void;
 }
 
@@ -30,11 +30,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = useCallback(async (token: string, displayName = 'Participant') => {
+  const login = useCallback(async (familyId: string, password: string, displayName = 'Participant') => {
     const supabase = getSupabaseBrowser();
     const device_id = getDeviceId();
-    const { data, error } = await supabase.rpc('login_with_token', {
-      p_token: token,
+    const { data, error } = await supabase.rpc('login_with_password', {
+      p_family_id: familyId,
+      p_password: password,
       p_device_id: device_id,
       p_display_name: displayName,
     });

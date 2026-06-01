@@ -39,6 +39,18 @@ create table if not exists public.families (
 );
 
 -- ============================================================================
+--  TABLE : family_secrets (mot de passe par famille)
+--  Jamais lisible par les clients : aucune policy RLS → seules la clé service_role
+--  et les fonctions "security definer" y accèdent. Évite que les participants
+--  puissent lire le mot de passe des autres familles via l'API.
+-- ============================================================================
+create table if not exists public.family_secrets (
+  family_id uuid primary key references public.families(id) on delete cascade,
+  password  text not null
+);
+alter table public.family_secrets enable row level security;
+
+-- ============================================================================
 --  TABLE : users (participants rattachés à une famille)
 --  Auth anonyme : un participant = un appareil rattaché à une famille via QR.
 -- ============================================================================
@@ -332,6 +344,46 @@ begin
   if v_user.id is null then
     insert into public.users (family_id, device_id, display_name)
     values (v_family.id, p_device_id, p_display_name)
+    returning * into v_user;
+  end if;
+
+  return query select v_user.id, v_family.id, v_family.name, v_family.avatar, v_family.color, v_user.role;
+end;
+$$;
+
+-- ============================================================================
+--  RPC : connexion par sélection de famille + mot de passe
+-- ============================================================================
+create or replace function public.login_with_password(
+  p_family_id uuid,
+  p_password text,
+  p_device_id text,
+  p_display_name text default 'Participant'
+) returns table (user_id uuid, family_id uuid, family_name text, family_avatar text, family_color text, role user_role)
+language plpgsql
+security definer
+as $$
+declare
+  v_family public.families;
+  v_secret public.family_secrets;
+  v_user public.users;
+begin
+  select * into v_family from public.families f where f.id = p_family_id;
+  if v_family.id is null then
+    raise exception 'INVALID_FAMILY';
+  end if;
+
+  select * into v_secret from public.family_secrets s where s.family_id = p_family_id;
+  if v_secret.family_id is null or v_secret.password <> p_password then
+    raise exception 'INVALID_PASSWORD';
+  end if;
+
+  select * into v_user from public.users u
+  where u.family_id = p_family_id and u.device_id = p_device_id limit 1;
+
+  if v_user.id is null then
+    insert into public.users (family_id, device_id, display_name)
+    values (p_family_id, p_device_id, p_display_name)
     returning * into v_user;
   end if;
 

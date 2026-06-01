@@ -10,6 +10,14 @@ insert into public.families (name, avatar, color, access_token) values
   ('Famille Stitch', '👽', '#0ea5e9', 'demo-stitch-token')
 on conflict (access_token) do nothing;
 
+-- ── Mots de passe des familles de démo ──────────────────────────────────────
+insert into public.family_secrets (family_id, password)
+select id, 'mickey123' from public.families where access_token = 'demo-mickey-token'
+on conflict (family_id) do update set password = excluded.password;
+insert into public.family_secrets (family_id, password)
+select id, 'stitch123' from public.families where access_token = 'demo-stitch-token'
+on conflict (family_id) do update set password = excluded.password;
+
 -- ── MISSIONS ────────────────────────────────────────────────────────────────
 insert into public.missions (title, description, category, points, requires_photo, icon, sort_order) values
   ('Photo devant le château',        'Toute l''équipe prend la pose devant le château emblématique.', 'photo', 20, true, '🏰', 1),
