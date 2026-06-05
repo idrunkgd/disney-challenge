@@ -17,7 +17,8 @@
     "next": "^15.5.4",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "vercel": "^54.9.1"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

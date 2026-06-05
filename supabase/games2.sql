@@ -4,6 +4,46 @@
 --  Pendu & Petit Bac comptent au classement ; Tu préfères = juste pour le fun.
 -- ============================================================================
 
+-- ── PRÉREQUIS (no-op si déjà créés par games.sql / mystery.sql) ─────────────
+-- Garantit que la vue de classement ci-dessous ne plante pas pour une dépendance.
+create table if not exists public.mystery_guesses (
+  id uuid primary key default gen_random_uuid(),
+  family_id uuid not null references public.families(id) on delete cascade unique,
+  guess text not null default '', status submission_status not null default 'pending',
+  created_at timestamptz not null default now()
+);
+create table if not exists public.bingo_cards (
+  id uuid primary key default gen_random_uuid(),
+  title text not null, category text not null default 'Détails cachés',
+  difficulty text not null default 'easy', points int not null default 5,
+  is_active boolean not null default true, sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+create table if not exists public.bingo_completions (
+  id uuid primary key default gen_random_uuid(),
+  family_id uuid not null references public.families(id) on delete cascade,
+  card_id uuid not null references public.bingo_cards(id) on delete cascade,
+  user_id uuid references public.users(id) on delete set null,
+  created_at timestamptz not null default now(), unique (family_id, card_id)
+);
+create or replace function public.bingo_family_points(p_family_id uuid)
+returns int language plpgsql stable security definer as $$
+declare done int[]; base int := 0; bonus int := 0; ln int[];
+begin
+  select coalesce(array_agg(b.sort_order), '{}') into done
+  from public.bingo_completions c join public.bingo_cards b on b.id = c.card_id
+  where c.family_id = p_family_id and b.sort_order between 1 and 25;
+  base := coalesce(array_length(done, 1), 0) * 10;
+  for ln in select l from (values
+    (array[1,2,3,4,5]),(array[6,7,8,9,10]),(array[11,12,13,14,15]),(array[16,17,18,19,20]),(array[21,22,23,24,25]),
+    (array[1,6,11,16,21]),(array[2,7,12,17,22]),(array[3,8,13,18,23]),(array[4,9,14,19,24]),(array[5,10,15,20,25]),
+    (array[1,7,13,19,25]),(array[5,9,13,17,21])
+  ) as t(l) loop
+    if ln <@ done then bonus := bonus + 20; end if;
+  end loop;
+  return base + bonus;
+end; $$;
+
 -- ── PENDU ────────────────────────────────────────────────────────────────────
 create table if not exists public.hangman_words (
   id uuid primary key default gen_random_uuid(),
@@ -37,43 +77,10 @@ begin
   on conflict (family_id, word_id) do nothing;
 end; $$;
 
--- ── PETIT BAC ────────────────────────────────────────────────────────────────
-create table if not exists public.petitbac_rounds (
-  id uuid primary key default gen_random_uuid(),
-  letter text not null,
-  categories jsonb not null default '["Un personnage Disney","Un film Disney","Une attraction","Un méchant Disney","Quelque chose à manger"]',
-  is_active boolean not null default false,
-  created_at timestamptz not null default now()
-);
-alter table public.petitbac_rounds enable row level security;
-drop policy if exists "read_petitbac_rounds" on public.petitbac_rounds;
-create policy "read_petitbac_rounds" on public.petitbac_rounds for select using (true);
-
-create table if not exists public.petitbac_submissions (
-  id uuid primary key default gen_random_uuid(),
-  round_id uuid not null references public.petitbac_rounds(id) on delete cascade,
-  family_id uuid not null references public.families(id) on delete cascade,
-  answers jsonb not null default '{}',
-  status submission_status not null default 'pending',
-  points int not null default 0,
-  created_at timestamptz not null default now(),
-  unique (round_id, family_id)
-);
-alter table public.petitbac_submissions enable row level security;
-drop policy if exists "read_petitbac_sub" on public.petitbac_submissions;
-create policy "read_petitbac_sub" on public.petitbac_submissions for select using (true);
-
--- Soumission d'une grille (toujours "pending", validation = admin)
-create or replace function public.submit_petitbac(p_round_id uuid, p_family_id uuid, p_answers jsonb)
-returns public.petitbac_submissions language plpgsql security definer as $$
-declare v_row public.petitbac_submissions;
-begin
-  insert into public.petitbac_submissions (round_id, family_id, answers, status)
-  values (p_round_id, p_family_id, p_answers, 'pending')
-  on conflict (round_id, family_id) do update set answers = excluded.answers, status = 'pending', created_at = now()
-  returning * into v_row;
-  return v_row;
-end; $$;
+-- ── PETIT BAC : supprimé ─────────────────────────────────────────────────────
+drop function if exists public.submit_petitbac(uuid, uuid, jsonb);
+drop table if exists public.petitbac_submissions;
+drop table if exists public.petitbac_rounds;
 
 -- ── TU PRÉFÈRES (non scoré) ──────────────────────────────────────────────────
 create table if not exists public.wyr_questions (
@@ -112,10 +119,9 @@ select f.id as family_id, f.name, f.avatar, f.color,
   coalesce(my.pts,0) as mystery_points,
   coalesce(public.bingo_family_points(f.id),0) as bingo_points,
   coalesce(hg.pts,0) as hangman_points,
-  coalesce(pb.pts,0) as petitbac_points,
   coalesce(ms.pts,0)+coalesce(sm.pts,0)+coalesce(qz.pts,0)+coalesce(bt.pts,0)
     +coalesce(my.pts,0)+coalesce(public.bingo_family_points(f.id),0)
-    +coalesce(hg.pts,0)+coalesce(pb.pts,0) as total_points,
+    +coalesce(hg.pts,0) as total_points,
   coalesce(ms.cnt,0) as missions_completed
 from public.families f
 left join (select family_id, sum(points_awarded) pts, count(*) cnt from public.mission_submissions where status='approved' group by family_id) ms on ms.family_id=f.id
@@ -123,23 +129,18 @@ left join (select family_id, sum(points) pts from public.secret_missions where s
 left join (select family_id, sum(points_awarded) pts from public.quiz_answers group by family_id) qz on qz.family_id=f.id
 left join (select family_id, sum(points_awarded) pts from public.blind_answers group by family_id) bt on bt.family_id=f.id
 left join (select family_id, 500 as pts from public.mystery_guesses where status='approved') my on my.family_id=f.id
-left join (select s.family_id, sum(w.points) pts from public.hangman_solved s join public.hangman_words w on w.id=s.word_id group by s.family_id) hg on hg.family_id=f.id
-left join (select family_id, sum(points) pts from public.petitbac_submissions where status='approved' group by family_id) pb on pb.family_id=f.id;
+left join (select s.family_id, sum(w.points) pts from public.hangman_solved s join public.hangman_words w on w.id=s.word_id group by s.family_id) hg on hg.family_id=f.id;
 grant select on public.family_scores to anon, authenticated;
 
 -- ── SEED : mots du Pendu ─────────────────────────────────────────────────────
 delete from public.hangman_words;
 insert into public.hangman_words (answer, hint) values
 ('LE ROI LION','Film'),('LA REINE DES NEIGES','Film'),('VAIANA','Film'),('RAIPONCE','Film'),
-('ALADDIN','Film'),('CENDRILLON','Film'),('MULAN','Film'),('HERCULE','Film'),('TARZAN','Film'),
-('POCAHONTAS','Film'),('DUMBO','Film'),('BAMBI','Film'),('PINOCCHIO','Film'),('ENCANTO','Film'),
-('COCO','Film'),('LUCA','Film'),('RATATOUILLE','Film'),('ZOOTOPIE','Film'),('REBELLE','Film'),
-('LE LIVRE DE LA JUNGLE','Film'),('LA PETITE SIRENE','Film'),('LA BELLE ET LA BETE','Film'),
-('PETER PAN','Film'),('LES INDESTRUCTIBLES','Film'),('MONSTRES ET CIE','Film'),
-('MICKEY','Personnage'),('MINNIE','Personnage'),('DONALD','Personnage'),('SIMBA','Personnage'),
-('STITCH','Personnage'),('OLAF','Personnage'),('WOODY','Personnage'),('ARIEL','Personnage'),
-('JASMINE','Personnage'),('MUSHU','Personnage'),('BALOO','Personnage'),('MOWGLI','Personnage'),
-('REMY','Personnage'),('MAUI','Personnage'),('BAYMAX','Personnage');
+('ALADDIN','Film'),('CENDRILLON','Film'),('MULAN','Film'),('ENCANTO','Film'),
+('RATATOUILLE','Film'),('ZOOTOPIE','Film'),
+('MICKEY','Personnage'),('MINNIE','Personnage'),('SIMBA','Personnage'),('STITCH','Personnage'),
+('OLAF','Personnage'),('WOODY','Personnage'),('ARIEL','Personnage'),('BALOO','Personnage'),
+('REMY','Personnage'),('BAYMAX','Personnage');
 
 -- ── SEED : Tu préfères ───────────────────────────────────────────────────────
 delete from public.wyr_questions;
@@ -173,7 +174,3 @@ insert into public.wyr_questions (option_a, option_b) values
 ('Un tour de tapis volant','Un tour en gondole à Agrabah'),
 ('Avoir le carrosse de Cendrillon','Avoir le bateau de Vaiana');
 
--- ── SEED : un round de Petit Bac actif (lettre M) ────────────────────────────
-insert into public.petitbac_rounds (letter, is_active)
-select 'M', true
-where not exists (select 1 from public.petitbac_rounds);
