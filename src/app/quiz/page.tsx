@@ -151,7 +151,7 @@ export default function QuizPage() {
         </div>
 
         <div className="mb-3 flex items-center justify-between px-1 text-xs text-white/50">
-          <span>{LEVELS[level - 1].icon} {LEVELS[level - 1].label} · {level} pt{level > 1 ? 's' : ''} / bonne réponse</span>
+          <span>{LEVELS[level - 1].icon} {LEVELS[level - 1].label} · {level * 2} pts / bonne réponse</span>
           <span>{doneInLevel}/{list.length} jouées</span>
         </div>
 
@@ -207,7 +207,7 @@ export default function QuizPage() {
       {/* Carte question : fond plein sombre + texte clair pour une lecture nette */}
       <div className="rounded-2xl border border-white/10 bg-magic-900 p-6 shadow-xl">
         <span className="chip mb-3 bg-gold-500/20 text-gold-300">
-          {LEVELS[active.difficulty - 1].icon} {LEVELS[active.difficulty - 1].label} · +{active.difficulty} pt{active.difficulty > 1 ? 's' : ''}
+          {LEVELS[active.difficulty - 1].icon} {LEVELS[active.difficulty - 1].label} · +{active.difficulty * 2} pts
         </span>
         <h2 className="text-lg font-semibold text-white">{active.question}</h2>
         <div className="mt-4 space-y-2">
