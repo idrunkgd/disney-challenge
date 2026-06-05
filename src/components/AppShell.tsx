@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSession } from '@/hooks/useSession';
 import { BottomNav } from './BottomNav';
+import { Logo } from './Logo';
 
 // Enveloppe les pages participant : redirige vers /login si pas de session,
 // affiche l'en-tête famille + la navigation basse.
@@ -35,15 +36,16 @@ export function AppShell({
   return (
     <div className="min-h-[100dvh] pb-20">
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-magic-950/70 px-4 py-3 backdrop-blur-lg">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {back && (
             <button onClick={() => router.back()} className="text-white/70 hover:text-white" aria-label="Retour">
               ←
             </button>
           )}
+          <Logo className="h-6 w-6 text-white" />
           <span className="text-lg">{session.family_avatar}</span>
           <div className="leading-tight">
-            <div className="text-xs text-white/50">{title ?? 'Dasolabs Challenge'}</div>
+            <div className="label-mono">{title ?? 'dasolabs / challenge'}</div>
             <div className="text-sm font-semibold">{session.family_name}</div>
           </div>
         </div>

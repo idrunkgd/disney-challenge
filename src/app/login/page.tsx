@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/hooks/useSession';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { Logo } from '@/components/Logo';
 
 interface FamilyOption {
   id: string;
@@ -63,8 +64,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 py-10">
-      <div className="animate-float text-6xl">🏰</div>
-      <h1 className="title-magic mt-4 text-center text-3xl">DASOLABS<br />DISNEY CHALLENGE</h1>
+      <Logo className="h-16 w-16 animate-float text-white" />
+      <span className="mt-3 font-display text-2xl font-bold lowercase tracking-tight text-white">dasolabs</span>
+      <h1 className="title-magic mt-2 text-center text-3xl">DISNEY CHALLENGE</h1>
       <p className="mt-2 text-center text-sm text-white/60">
         Choisissez votre famille et entrez le mot de passe fourni par l'organisateur.
       </p>

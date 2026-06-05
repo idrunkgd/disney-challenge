@@ -1,5 +1,5 @@
 // Service worker minimal pour rendre la PWA installable + cache "app shell"
-const CACHE = 'dasolabs-disney-v2';
+const CACHE = 'dasolabs-disney-v3';
 const APP_SHELL = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {

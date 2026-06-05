@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Poppins } from 'next/font/google';
+import { DM_Sans, DM_Mono } from 'next/font/google';
 import './globals.css';
 import { SessionProvider } from '@/hooks/useSession';
 import { PwaRegister } from '@/components/PwaRegister';
 
-const poppins = Poppins({
+// Typographies de la charte Dasolabs
+const dmSans = DM_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
+});
+const dmMono = DM_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
 });
 
 export const metadata: Metadata = {
@@ -22,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#4f46e5',
+  themeColor: '#3434e8',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -31,7 +37,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={poppins.variable}>
+    <html lang="fr" className={`${dmSans.variable} ${dmMono.variable}`}>
       <body>
         <SessionProvider>
           <main className="mx-auto min-h-[100dvh] w-full max-w-md">{children}</main>

@@ -8,38 +8,48 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Palette "magique" inspirée parc, sans copyright
+        // ── Charte graphique Dasolabs ──────────────────────────────────
+        // "magic" = base sombre (Midnight indigo / Stellar black) + Electric blue
         magic: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          950: '#1e1b4b',
+          50: '#f1f1f6',   // Silver comet
+          100: '#e6e6fb',
+          200: '#c9c9f7',
+          300: '#a3a3f2',
+          400: '#7d7dec',
+          500: '#4d4dec',
+          600: '#3434e8', // Electric blue (accent principal)
+          700: '#2a2ac0',
+          800: '#23234a',
+          900: '#202037', // Midnight indigo
+          950: '#07070d', // Stellar black
         },
+        // "gold" repurposé en bleu clair brillant (mise en avant des scores)
         gold: {
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
+          400: '#8a8aff',
+          500: '#6f6fff',
+          600: '#4d4dec',
         },
+        // "candy" repurposé en rouge (erreurs / refus)
         candy: {
-          400: '#f472b6',
-          500: '#ec4899',
-          600: '#db2777',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626',
+          700: '#b91c1c',
         },
+        electric: '#3434e8',
+        midnight: '#202037',
+        stellar: '#07070d',
+        silver: '#f1f1f6',
       },
       fontFamily: {
-        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-sans)', 'system-ui', 'sans-serif'],
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       boxShadow: {
-        glow: '0 0 30px -5px rgba(99, 102, 241, 0.5)',
-        'glow-gold': '0 0 30px -5px rgba(245, 158, 11, 0.5)',
+        glow: '0 0 30px -5px rgba(52, 52, 232, 0.55)',
+        'glow-gold': '0 0 30px -5px rgba(111, 111, 255, 0.5)',
       },
       keyframes: {
         float: {
