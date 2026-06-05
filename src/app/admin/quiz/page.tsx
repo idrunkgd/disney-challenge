@@ -60,11 +60,11 @@ export default function QuizAdminPage() {
           </div>
         ))}
         <select value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: Number(e.target.value) })} className="rounded-xl border border-white/10 bg-magic-900 px-3 py-2">
-          <option value={1}>Facile (10 pts)</option>
-          <option value={2}>Moyenne (20 pts)</option>
-          <option value={3}>Difficile (30 pts)</option>
-          <option value={4}>Expert (40 pts)</option>
-          <option value={5}>Impossible (50 pts)</option>
+          <option value={1}>Facile (1 pt)</option>
+          <option value={2}>Moyenne (2 pts)</option>
+          <option value={3}>Difficile (3 pts)</option>
+          <option value={4}>Expert (4 pts)</option>
+          <option value={5}>Impossible (5 pts)</option>
         </select>
         <button onClick={save} className="btn-primary w-full">{form.id ? 'Mettre à jour' : 'Ajouter la question'}</button>
         {form.id && <button onClick={() => setForm(empty)} className="btn-ghost w-full">Annuler</button>}
@@ -78,7 +78,7 @@ export default function QuizAdminPage() {
                 <div className="font-medium">{q.question}</div>
                 <div className="text-xs text-emerald-400">✓ {q.options[q.correct_index]}</div>
                 <div className="mt-0.5 text-[11px] text-white/40">
-                  {['', '🟢 Facile', '🔵 Moyenne', '🟣 Difficile', '🟠 Expert', '🔴 Impossible'][q.difficulty] ?? `Niveau ${q.difficulty}`} · {10 * q.difficulty} pts
+                  {['', '🟢 Facile', '🔵 Moyenne', '🟣 Difficile', '🟠 Expert', '🔴 Impossible'][q.difficulty] ?? `Niveau ${q.difficulty}`} · {q.difficulty} pt{q.difficulty > 1 ? 's' : ''}
                 </div>
               </div>
               <button onClick={() => setForm({ ...q })} className="chip">✏️</button>
