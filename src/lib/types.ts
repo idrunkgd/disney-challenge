@@ -146,7 +146,8 @@ export interface FamilyScore {
   blind_points: number;
   mystery_points: number;
   bingo_points: number;
-  agent_points: number;
+  hangman_points: number;
+  agent_points?: number;
   total_points: number;
   missions_completed: number;
 }
