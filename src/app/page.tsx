@@ -10,6 +10,9 @@ const tiles = [
   { href: '/quiz', icon: '🧠', label: 'Quiz Disney', desc: '100 questions, 5 niveaux' },
   { href: '/bingo', icon: '🎰', label: 'Bingo Disney', desc: 'Grille 5×5 à cocher' },
   { href: '/mystery', icon: '🖼️', label: 'Image Mystère', desc: 'Devinez le film · 500 pts' },
+  { href: '/pendu', icon: '🪢', label: 'Le Pendu', desc: 'Devine le mot Disney' },
+  { href: '/petitbac', icon: '📝', label: 'Petit Bac', desc: 'Une lettre, des catégories' },
+  { href: '/tupreferes', icon: '🤔', label: 'Tu préfères ?', desc: 'Dilemmes pour rire' },
   { href: '/leaderboard', icon: '🏆', label: 'Classement', desc: 'Le score en direct' },
 ];
 

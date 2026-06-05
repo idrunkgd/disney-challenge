@@ -151,6 +151,26 @@ export interface FamilyScore {
   missions_completed: number;
 }
 
+export interface HangmanWord {
+  id: string;
+  answer: string;
+  hint: string;
+  points: number;
+}
+
+export interface PetitBacRound {
+  id: string;
+  letter: string;
+  categories: string[];
+  is_active: boolean;
+}
+
+export interface WyrQuestion {
+  id: string;
+  option_a: string;
+  option_b: string;
+}
+
 export interface BingoCard {
   id: string;
   title: string;

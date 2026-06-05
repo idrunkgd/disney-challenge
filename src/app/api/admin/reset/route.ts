@@ -31,6 +31,9 @@ export async function POST() {
     await supabase.from('secret_missions').delete().neq('id', ALL);
     await supabase.from('mystery_guesses').delete().neq('id', ALL);
     await supabase.from('bingo_completions').delete().neq('id', ALL);
+    await supabase.from('hangman_solved').delete().neq('id', ALL);
+    await supabase.from('petitbac_submissions').delete().neq('id', ALL);
+    await supabase.from('wyr_votes').delete().neq('id', ALL);
     await supabase.from('photos').delete().neq('id', ALL);
 
     return NextResponse.json({ ok: true, photosDeleted: paths.length });
