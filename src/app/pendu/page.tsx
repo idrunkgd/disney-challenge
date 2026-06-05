@@ -74,6 +74,11 @@ export default function PenduPage() {
         </div>
         <div className="text-right">
           <div className="text-2xl">{word ? HANGED[Math.min(errors, MAX_ERRORS)] : '🎬'}</div>
+          {word && !won && !lost && (
+            <div className="text-[11px] font-medium text-white/60">
+              {MAX_ERRORS - errors} essai{MAX_ERRORS - errors > 1 ? 's' : ''} restant{MAX_ERRORS - errors > 1 ? 's' : ''}
+            </div>
+          )}
         </div>
       </div>
 
