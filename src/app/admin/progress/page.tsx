@@ -24,7 +24,7 @@ export default function ProgressPage() {
     const [
       { data: scores }, { data: subs }, { data: quiz }, { data: bingo },
       { data: pendu }, { data: mystery }, { data: wyr },
-      { data: activeQ }, { data: activeW },
+      { data: activeQ }, { data: activeW }, { data: activeImg },
       { count: mCount }, { count: qCount }, { count: hCount },
     ] = await Promise.all([
       supabase.from('family_scores').select('*').order('total_points', { ascending: false }),
@@ -32,10 +32,11 @@ export default function ProgressPage() {
       supabase.from('quiz_answers').select('family_id, question_id'),
       supabase.from('bingo_completions').select('family_id'),
       supabase.from('hangman_solved').select('family_id, word_id'),
-      supabase.from('mystery_guesses').select('family_id, status'),
+      supabase.from('mystery_guesses').select('family_id, status, image_id'),
       supabase.from('wyr_votes').select('user:users(family_id)'),
       supabase.from('quiz_questions').select('id').eq('is_active', true),
       supabase.from('hangman_words').select('id').eq('is_active', true),
+      supabase.from('mystery_image').select('id').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('missions').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('quiz_questions').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('hangman_words').select('*', { count: 'exact', head: true }).eq('is_active', true),
@@ -60,8 +61,12 @@ export default function ProgressPage() {
     const penduC = countBy((pendu as any[] | null)?.filter((s) => activeWSet.has(s.word_id)) ?? []);
     const wyrC: Record<string, number> = {};
     (wyr as any[] | null)?.forEach((v) => { const f = v.user?.family_id; if (f) wyrC[f] = (wyrC[f] ?? 0) + 1; });
+    // Statut de l'IMAGE EN COURS uniquement (les anciennes manches ne comptent pas ici)
+    const activeImgId = (activeImg as { id: string } | null)?.id;
     const myst: Record<string, 'approved' | 'pending'> = {};
-    (mystery as any[] | null)?.forEach((g) => { myst[g.family_id] = g.status; });
+    (mystery as any[] | null)?.forEach((g) => {
+      if (activeImgId && g.image_id === activeImgId) myst[g.family_id] = g.status;
+    });
 
     setRows(
       ((scores as FamilyScore[]) ?? []).map((s) => ({
