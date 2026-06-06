@@ -9,10 +9,18 @@ export async function GET() {
   const unauth = await requireAdmin();
   if (unauth) return unauth;
   const supabase = createAdminClient();
-  const [{ data: image }, { data: guesses }] = await Promise.all([
-    supabase.from('mystery_image').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    supabase.from('mystery_guesses').select('*, family:families(name, avatar)').order('created_at'),
-  ]);
+  const { data: image } = await supabase
+    .from('mystery_image').select('*').eq('is_active', true)
+    .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+  // On ne montre que les propositions de l'image en cours
+  let guesses: any[] = [];
+  if (image) {
+    const { data } = await supabase
+      .from('mystery_guesses').select('*, family:families(name, avatar)')
+      .eq('image_id', image.id).order('created_at');
+    guesses = data ?? [];
+  }
   return NextResponse.json({ image, guesses });
 }
 

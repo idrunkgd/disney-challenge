@@ -24,19 +24,25 @@ export default function ProgressPage() {
     const [
       { data: scores }, { data: subs }, { data: quiz }, { data: bingo },
       { data: pendu }, { data: mystery }, { data: wyr },
+      { data: activeQ }, { data: activeW },
       { count: mCount }, { count: qCount }, { count: hCount },
     ] = await Promise.all([
       supabase.from('family_scores').select('*').order('total_points', { ascending: false }),
       supabase.from('mission_submissions').select('family_id, status'),
-      supabase.from('quiz_answers').select('family_id'),
+      supabase.from('quiz_answers').select('family_id, question_id'),
       supabase.from('bingo_completions').select('family_id'),
-      supabase.from('hangman_solved').select('family_id'),
+      supabase.from('hangman_solved').select('family_id, word_id'),
       supabase.from('mystery_guesses').select('family_id, status'),
       supabase.from('wyr_votes').select('user:users(family_id)'),
+      supabase.from('quiz_questions').select('id').eq('is_active', true),
+      supabase.from('hangman_words').select('id').eq('is_active', true),
       supabase.from('missions').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('quiz_questions').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('hangman_words').select('*', { count: 'exact', head: true }).eq('is_active', true),
     ]);
+    // On ne compte que le contenu ACTIF (le quiz/pendu clôturé est ignoré)
+    const activeQSet = new Set((activeQ as { id: string }[] | null)?.map((q) => q.id) ?? []);
+    const activeWSet = new Set((activeW as { id: string }[] | null)?.map((w) => w.id) ?? []);
 
     const approved: Record<string, number> = {};
     const pending: Record<string, number> = {};
@@ -49,9 +55,9 @@ export default function ProgressPage() {
       arr?.forEach((x) => { const k = x[key]; if (k) m[k] = (m[k] ?? 0) + 1; });
       return m;
     };
-    const quizC = countBy(quiz as any[]);
+    const quizC = countBy((quiz as any[] | null)?.filter((a) => activeQSet.has(a.question_id)) ?? []);
     const bingoC = countBy(bingo as any[]);
-    const penduC = countBy(pendu as any[]);
+    const penduC = countBy((pendu as any[] | null)?.filter((s) => activeWSet.has(s.word_id)) ?? []);
     const wyrC: Record<string, number> = {};
     (wyr as any[] | null)?.forEach((v) => { const f = v.user?.family_id; if (f) wyrC[f] = (wyrC[f] ?? 0) + 1; });
     const myst: Record<string, 'approved' | 'pending'> = {};

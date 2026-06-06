@@ -39,16 +39,25 @@ export default function MysteryPage() {
   const load = useCallback(async () => {
     if (!session) return;
     const supabase = getSupabaseBrowser();
-    const [{ data: img }, { data: ans }, { data: g }] = await Promise.all([
-      supabase.from('mystery_image').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('quiz_answers').select('is_correct').eq('family_id', session.family_id).eq('is_correct', true),
-      supabase.from('mystery_guesses').select('*').eq('family_id', session.family_id).maybeSingle(),
-    ]);
+    const { data: img } = await supabase
+      .from('mystery_image').select('*').eq('is_active', true)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
     setImage((img as MysteryImage) ?? null);
-    setCorrectCount((ans as any[] | null)?.length ?? 0);
+
+    const [{ data: activeQ }, { data: ans }, { data: g }] = await Promise.all([
+      // Le dévoilement se base sur le QUIZ ACTIF (la nouvelle manche)
+      supabase.from('quiz_questions').select('id').eq('is_active', true),
+      supabase.from('quiz_answers').select('question_id').eq('family_id', session.family_id).eq('is_correct', true),
+      // La proposition est propre à l'image en cours
+      img
+        ? supabase.from('mystery_guesses').select('*').eq('family_id', session.family_id).eq('image_id', img.id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    const activeSet = new Set((activeQ as { id: string }[] | null)?.map((q) => q.id) ?? []);
+    setCorrectCount((ans as { question_id: string }[] | null)?.filter((a) => activeSet.has(a.question_id)).length ?? 0);
     const gg = (g as MysteryGuess) ?? null;
     setGuess(gg);
-    if (gg) setDraft(gg.guess);
+    setDraft(gg ? gg.guess : '');
     setLoading(false);
   }, [session]);
 
