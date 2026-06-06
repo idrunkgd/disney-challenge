@@ -6,6 +6,7 @@ import { adminFetch } from '@/lib/admin-client';
 
 const cards = [
   { href: '/admin/progress', icon: '📊', label: 'Avancement', desc: 'Suivi en direct de chaque famille' },
+  { href: '/admin/games', icon: '🔒', label: 'Ouvrir/Clôturer', desc: 'Figer un jeu (points gardés)' },
   { href: '/admin/validation', icon: '✅', label: 'Validation photos', desc: 'Accepter / refuser les preuves' },
   { href: '/admin/families', icon: '👨‍👩‍👧', label: 'Familles', desc: 'Créer les équipes et leurs mots de passe' },
   { href: '/admin/missions', icon: '🎯', label: 'Missions', desc: 'Catalogue des défis' },

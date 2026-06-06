@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { useSession } from '@/hooks/useSession';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { useGameOpen } from '@/hooks/useGameOpen';
 import type { QuizQuestion } from '@/lib/types';
 
 const TIME_PER_Q = 20; // secondes
@@ -24,6 +25,7 @@ interface AnswerInfo {
 
 export default function QuizPage() {
   const { session } = useSession();
+  const quizOpen = useGameOpen('quiz');
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, AnswerInfo>>({});
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function QuizPage() {
   const levelList = (d: number) => questions.filter((q) => q.difficulty === d);
 
   function openQuestion(q: QuizQuestion) {
-    if (answers[q.id]) return;
+    if (answers[q.id] || !quizOpen) return;
     setActive(q);
     setChosen(null);
     setTime(TIME_PER_Q);
@@ -111,7 +113,8 @@ export default function QuizPage() {
   }
 
   const totalPoints = Object.values(answers).reduce((s, a) => s + a.points_awarded, 0);
-  const answeredCount = Object.keys(answers).length;
+  // On ne compte que les questions ACTIVES (l'ancien quiz clôturé est ignoré)
+  const answeredCount = questions.filter((q) => answers[q.id]).length;
 
   // ── PLATEAU (par niveau, 20 à la fois) ──────────────────────────────────────
   if (!active) {
@@ -129,6 +132,12 @@ export default function QuizPage() {
             <div className="text-[10px] uppercase text-white/40">points</div>
           </div>
         </div>
+
+        {!quizOpen && (
+          <div className="card mb-4 border-candy-400/40 bg-candy-500/10 p-3 text-center text-sm font-medium text-candy-300">
+            🔒 Quiz clôturé — vous ne pouvez plus répondre. Vos points sont conservés.
+          </div>
+        )}
 
         {/* Onglets de niveau */}
         <div className="mb-4 flex gap-2 overflow-x-auto pb-1">

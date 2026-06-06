@@ -7,6 +7,7 @@ import { adminFetch, setAdminPw, clearAdminPw } from '@/lib/admin-client';
 
 const nav = [
   { href: '/admin/progress', label: '📊 Avancement' },
+  { href: '/admin/games', label: '🔒 Ouvrir/Clôturer' },
   { href: '/admin/validation', label: '✅ Validation' },
   { href: '/admin/families', label: '👨‍👩‍👧 Familles' },
   { href: '/admin/missions', label: '🎯 Missions' },

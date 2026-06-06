@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { useSession } from '@/hooks/useSession';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { useGameOpen } from '@/hooks/useGameOpen';
 import type { HangmanWord } from '@/lib/types';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -15,6 +16,7 @@ const norm = (s: string) => s.toUpperCase().normalize('NFD').replace(/[\u0300-\u
 
 export default function PenduPage() {
   const { session } = useSession();
+  const penduOpen = useGameOpen('pendu');
   const [words, setWords] = useState<HangmanWord[]>([]);
   const [solvedIds, setSolvedIds] = useState<Set<string>>(new Set());
   const [word, setWord] = useState<HangmanWord | null>(null);
@@ -36,6 +38,7 @@ export default function PenduPage() {
   useEffect(() => { load(); }, [load]);
 
   function newWord() {
+    if (!penduOpen) return;
     const pool = words.filter((w) => !solvedIds.has(w.id));
     if (pool.length === 0) { setWord(null); return; }
     setWord(pool[Math.floor(Math.random() * pool.length)]);
@@ -59,18 +62,20 @@ export default function PenduPage() {
   }, [won]);
 
   function guess(l: string) {
-    if (won || lost) return;
+    if (won || lost || !penduOpen) return;
     setGuessed((g) => new Set(g).add(l));
   }
 
-  const remaining = words.length - solvedIds.size;
+  // On ne compte que les mots ACTIFS (l'ancien pendu clôturé est ignoré)
+  const solvedActive = words.filter((w) => solvedIds.has(w.id)).length;
+  const remaining = words.length - solvedActive;
 
   return (
     <AppShell back title="Le Pendu">
       <div className="card mb-4 flex items-center justify-between p-4">
         <div>
           <div className="text-sm font-semibold">🪢 Le Pendu Disney</div>
-          <div className="text-xs text-white/50">{solvedIds.size}/{words.length} mots trouvés</div>
+          <div className="text-xs text-white/50">{solvedActive}/{words.length} mots trouvés</div>
         </div>
         <div className="text-right">
           <div className="text-2xl">{word ? HANGED[Math.min(errors, MAX_ERRORS)] : '🎬'}</div>
@@ -82,8 +87,16 @@ export default function PenduPage() {
         </div>
       </div>
 
+      {!penduOpen && (
+        <div className="card mb-4 border-candy-400/40 bg-candy-500/10 p-3 text-center text-sm font-medium text-candy-300">
+          🔒 Pendu clôturé — vos points sont conservés.
+        </div>
+      )}
+
       {loading ? (
         <p className="text-white/50">Chargement…</p>
+      ) : !penduOpen ? (
+        <div className="card p-6 text-center text-white/60">Ce jeu est terminé.</div>
       ) : !word ? (
         <div className="card p-6 text-center">
           {remaining === 0 ? (

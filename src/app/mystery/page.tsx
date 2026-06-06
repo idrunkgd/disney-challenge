@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { useSession } from '@/hooks/useSession';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { useGameOpen } from '@/hooks/useGameOpen';
 import type { MysteryImage, MysteryGuess } from '@/lib/types';
 
 const GRID = 10; // 10 × 10 = 100 blocs
@@ -27,6 +28,7 @@ function seededOrder(n: number, seed: number): number[] {
 
 export default function MysteryPage() {
   const { session } = useSession();
+  const mysteryOpen = useGameOpen('mystery');
   const [image, setImage] = useState<MysteryImage | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [guess, setGuess] = useState<MysteryGuess | null>(null);
@@ -67,7 +69,7 @@ export default function MysteryPage() {
   const revealedSet = useMemo(() => new Set(order.slice(0, revealed)), [order, revealed]);
 
   async function submitGuess() {
-    if (!session || !draft.trim()) return;
+    if (!session || !draft.trim() || !mysteryOpen) return;
     setBusy(true);
     const supabase = getSupabaseBrowser();
     await supabase.rpc('submit_mystery_guess', { p_family_id: session.family_id, p_guess: draft.trim() });
@@ -123,6 +125,11 @@ export default function MysteryPage() {
               </div>
             ) : (
               <>
+                {!mysteryOpen && (
+                  <p className="mb-2 rounded-lg bg-candy-500/10 p-2 text-center text-sm font-medium text-candy-300">
+                    🔒 Image Mystère clôturée — vos points sont conservés.
+                  </p>
+                )}
                 <label className="text-sm font-medium">Votre réponse : quel est ce dessin animé ?</label>
                 <input
                   value={draft}
@@ -130,7 +137,7 @@ export default function MysteryPage() {
                   placeholder="Écrivez le nom du film…"
                   className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-magic-400"
                 />
-                <button onClick={submitGuess} disabled={busy || !draft.trim()} className="btn-primary mt-3 w-full">
+                <button onClick={submitGuess} disabled={busy || !draft.trim() || !mysteryOpen} className="btn-primary mt-3 w-full">
                   {busy ? 'Envoi…' : guess ? 'Modifier ma réponse' : 'Proposer cette réponse'}
                 </button>
                 {guess?.status === 'pending' && (
